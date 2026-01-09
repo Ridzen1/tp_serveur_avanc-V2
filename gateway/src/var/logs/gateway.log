@@ -1,0 +1,2 @@
+[2026-01-09T14:29:34.643009+00:00] gateway.INFO: Gateway: Forwarding request to /praticiens {"query":[]} []
+[2026-01-09T14:29:40.144068+00:00] gateway.INFO: Gateway: Received response from API {"status":500} []
