@@ -75,34 +75,37 @@ class PDOPraticienRepository implements PraticienRepositoryInterface
     // ... Le reste du fichier (findById, loadMotifs...) reste INCHANGÉ ...
     public function findById(string $id): ?Praticien
     {
-        // (Garde ton code actuel ici)
-        $stmt = $this->pdo->prepare('SELECT p.*, s.libelle FROM praticien p JOIN specialite s ON p.specialite_id = s.id WHERE p.id = :id');
-        $stmt->execute(['id' => $id]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->pdo->prepare('SELECT p.*, s.libelle FROM praticien p JOIN specialite s ON p.specialite_id = s.id WHERE p.id = :id');
+            $stmt->execute(['id' => $id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($row === false) {
+            if ($row === false) {
+                return null;
+            }
+
+            $praticien = new Praticien(
+                $row['id'],
+                $row['nom'],
+                $row['prenom'],
+                $row['ville'],
+                $row['email'],
+                $row['telephone'],
+                $row['libelle'],
+                $row['structure_id'],
+                $row['rpps_id'],
+                (bool)$row['organisation'],
+                (bool)$row['nouveau_patient'],
+                $row['titre']
+            );
+
+            $this->loadMotifsVisite($praticien);
+            $this->loadMoyensPaiement($praticien);
+
+            return $praticien;
+        } catch (\PDOException $e) {
             return null;
         }
-
-        $praticien = new Praticien(
-            $row['id'],
-            $row['nom'],
-            $row['prenom'],
-            $row['ville'],
-            $row['email'],
-            $row['telephone'],
-            $row['libelle'],
-            $row['structure_id'],
-            $row['rpps_id'],
-            (bool)$row['organisation'],
-            (bool)$row['nouveau_patient'],
-            $row['titre']
-        );
-
-        $this->loadMotifsVisite($praticien);
-        $this->loadMoyensPaiement($praticien);
-
-        return $praticien;
     }
 
     private function loadMotifsVisite(Praticien $praticien): void

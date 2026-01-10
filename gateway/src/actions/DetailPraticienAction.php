@@ -42,19 +42,36 @@ class DetailPraticienAction
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus($apiResponse->getStatusCode());
 
-        } catch (\Exception $e) {
-            $this->logger->error('Gateway: Error forwarding request', [
-                'error' => $e->getMessage()
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            $status = $e->getResponse()->getStatusCode();
+            $this->logger->error('Gateway: API Client error', [
+                'status' => $status,
+                'message' => $e->getMessage()
             ]);
 
-            $response->getBody()->write(json_encode([
-                'error' => 'Gateway Error',
-                'message' => 'Unable to reach backend API'
-            ]));
+            switch ($status) {
+                case 400: throw new \Slim\Exception\HttpBadRequestException($request, $e->getMessage());
+                case 401: throw new \Slim\Exception\HttpUnauthorizedException($request, $e->getMessage());
+                case 403: throw new \Slim\Exception\HttpForbiddenException($request, $e->getMessage());
+                case 404: throw new \Slim\Exception\HttpNotFoundException($request, $e->getMessage());
+                case 405: throw new \Slim\Exception\HttpMethodNotAllowedException($request, $e->getMessage());
+                default: throw new \Slim\Exception\HttpInternalServerErrorException($request, $e->getMessage());
+            }
 
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(502);
+        } catch (\GuzzleHttp\Exception\ServerException $e) {
+            $this->logger->error('Gateway: API Server error', [
+                'status' => $e->getResponse()->getStatusCode(),
+                'message' => $e->getMessage()
+            ]);
+            throw new \Slim\Exception\HttpInternalServerErrorException($request, "Erreur interne de l'API backend");
+
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            $this->logger->error('Gateway: Connection error', ['error' => $e->getMessage()]);
+            throw new \Slim\Exception\HttpInternalServerErrorException($request, "API non accessible ou délai dépassé");
+
+        } catch (\Exception $e) {
+            $this->logger->error('Gateway: Unexpected error', ['error' => $e->getMessage()]);
+            throw new \Slim\Exception\HttpInternalServerErrorException($request, $e->getMessage());
         }
     }
 }

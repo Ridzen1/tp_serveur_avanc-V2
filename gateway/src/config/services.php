@@ -12,7 +12,7 @@ return [
         return new Client([
             'base_uri' => $settings['api']['base_url'],
             'timeout' => $settings['api']['timeout'],
-            'http_errors' => false
+            'http_errors' => true
         ]);
     },
 
