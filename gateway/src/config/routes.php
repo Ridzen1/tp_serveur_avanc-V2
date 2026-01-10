@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Gateway\Actions\ListerPraticiensAction;
-use Gateway\Actions\DetailPraticienAction;
+use Gateway\Actions\GenericProxyAction;
 
 return function(\Slim\App $app): \Slim\App {
     
@@ -20,8 +19,8 @@ return function(\Slim\App $app): \Slim\App {
             ->withStatus(200);
     });
 
-    $app->get('/praticiens', ListerPraticiensAction::class);
-    $app->get('/praticiens/{id}', DetailPraticienAction::class);
+    $app->get('/praticiens', GenericProxyAction::class);
+    $app->get('/praticiens/{id}', GenericProxyAction::class);
 
     return $app;
 };

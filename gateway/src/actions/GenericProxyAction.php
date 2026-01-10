@@ -8,7 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
-class DetailPraticienAction
+class GenericProxyAction
 {
     private Client $httpClient;
     private LoggerInterface $logger;
@@ -21,16 +21,21 @@ class DetailPraticienAction
 
     public function __invoke(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ): ResponseInterface {
-        $id = $args['id'];
+        $method = $request->getMethod();
+        $path = $request->getUri()->getPath();
+        $query = $request->getUri()->getQuery();
+        
+        $uri = $path . ($query ? '?' . $query : '');
+
         try {
-            $uri = "/praticiens/{$id}";
+            $this->logger->info("Gateway: Forwarding {$method} request to {$uri}");
 
-            $this->logger->info("Gateway: Forwarding request to {$uri}");
-
-            $apiResponse = $this->httpClient->get($uri);
+            $apiResponse = $this->httpClient->request($method, $uri, [
+                'body' => $request->getBody(),
+                'headers' => $request->getHeaders()
+            ]);
 
             $this->logger->info('Gateway: Received response from API', [
                 'status' => $apiResponse->getStatusCode()
@@ -38,9 +43,16 @@ class DetailPraticienAction
 
             $response->getBody()->write($apiResponse->getBody()->getContents());
 
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus($apiResponse->getStatusCode());
+            // Copie les headers pertinents de la réponse API vers la réponse Gateway
+            $newResponse = $response->withStatus($apiResponse->getStatusCode());
+            foreach ($apiResponse->getHeaders() as $name => $values) {
+                // Éviter certains headers qui pourraient poser problème
+                if (!in_array(strtolower($name), ['content-length', 'transfer-encoding', 'connection'])) {
+                    $newResponse = $newResponse->withHeader($name, $values);
+                }
+            }
+
+            return $newResponse;
 
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $status = $e->getResponse()->getStatusCode();
