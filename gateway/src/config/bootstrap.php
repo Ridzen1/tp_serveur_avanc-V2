@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use DI\Container;
+use Gateway\Middlewares\CorsMiddleware;
 use Slim\Factory\AppFactory;
 
 $settings = require __DIR__ . '/settings.php';
@@ -18,6 +19,7 @@ foreach ($servicesDefinitions as $key => $factory) {
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
+$app->add(new CorsMiddleware());
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 
