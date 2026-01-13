@@ -18,7 +18,25 @@ services:
       - toubilib.net
     depends_on:
       - api.toubilib
+      - api.praticiens
     command: sh -c "composer update && php -S 0.0.0.0:80 -t /var/php/public"
+
+  # service api.praticiens : microservice pour les praticiens
+  #
+  api.praticiens:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6081:80'
+    volumes:
+      - ./app-praticiens:/var/php
+    working_dir: /var/php
+    networks:
+      - toubilib.net
+    depends_on:
+      - toubiprat.db
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.toubeelib : api pour la prise de rdv
   #

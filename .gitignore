@@ -9,5 +9,7 @@ composer.phar
 /app/src/config/jira.db.ini
 /app/vendor/
 /app/composer.lock
+/app-praticiens/vendor/
+/app-praticiens/composer.lock
 
 TODOVivien.md

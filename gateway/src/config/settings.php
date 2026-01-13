@@ -2,8 +2,14 @@
 
 return [
     'displayErrorDetails' => true,
-    'api' => [
-        'base_url' => 'http://api.toubilib:80',
-        'timeout' => 30
+    'services' => [
+        'praticiens' => [
+            'base_url' => 'http://api.praticiens:80',
+            'timeout' => 30
+        ],
+        'toubilib' => [
+            'base_url' => 'http://api.toubilib:80',
+            'timeout' => 30
+        ]
     ]
 ];

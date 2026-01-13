@@ -4,16 +4,17 @@ declare(strict_types=1);
 namespace Gateway\Actions;
 
 use GuzzleHttp\Client;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class GenericProxyAction
 {
-    private Client $httpClient;
+    private ContainerInterface $container;
 
-    public function __construct(Client $httpClient)
+    public function __construct(ContainerInterface $container)
     {
-        $this->httpClient = $httpClient;
+        $this->container = $container;
     }
 
     public function __invoke(
@@ -26,8 +27,10 @@ class GenericProxyAction
         
         $uri = $path . ($query ? '?' . $query : '');
 
+        $httpClient = $this->getClientForPath($path);
+
         try {
-            $apiResponse = $this->httpClient->request($method, $uri, [
+            $apiResponse = $httpClient->request($method, $uri, [
                 'body' => $request->getBody(),
                 'headers' => $request->getHeaders()
             ]);
@@ -66,5 +69,13 @@ class GenericProxyAction
         } catch (\Exception $e) {
             throw new \Slim\Exception\HttpInternalServerErrorException($request, $e->getMessage());
         }
+    }
+    
+    private function getClientForPath(string $path): Client
+    {
+        if (preg_match('#^/praticiens(/.*)?$#', $path)) {
+            return $this->container->get('praticiens.client');
+        }
+        return $this->container->get('toubilib.client');
     }
 }
