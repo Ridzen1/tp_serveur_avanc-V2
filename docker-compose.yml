@@ -3,8 +3,9 @@ networks:
     driver: bridge
 
 services:
-  # service api gateway : gateway devant l'api toubilib
-  #
+  # ------------------------------------------------------------
+  # API GATEWAY
+  # ------------------------------------------------------------
   api.gateway:
     build:
       context: build
@@ -19,27 +20,35 @@ services:
     depends_on:
       - api.toubilib
       - api.praticiens
-    command: sh -c "composer update && php -S 0.0.0.0:80 -t /var/php/public"
+      - api.rdv
+    # Commande Gateway : on doit faire l'install car le vendor n'est pas copié manuellement ici
+    # Si ça plante, on fera la même manip "docker run" pour la gateway
+    command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
 
-  # service api.praticiens : microservice pour les praticiens
-  #
-  api.praticiens:
+  # ------------------------------------------------------------
+  # SERVICE RDV (Ton exercice)
+  # ------------------------------------------------------------
+  api.rdv:
     build:
       context: build
       dockerfile: 8.4-cli.Dockerfile
     ports:
-      - '6081:80'
+      - '6082:80'
     volumes:
-      - ./app-praticiens:/var/php
+      - ./app-rdv:/var/php
     working_dir: /var/php
     networks:
       - toubilib.net
     depends_on:
-      - toubiprat.db
-    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+      - toubirdv.db
+    environment:
+      - DB_HOST=toubirdv.db
+    # ICI : On ne fait PAS de composer install car tu viens de le faire à l'étape 2
+    command: php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public
 
-  # service api.toubeelib : api pour la prise de rdv
-  #
+  # ------------------------------------------------------------
+  # API TOUBILIB (Monolithe)
+  # ------------------------------------------------------------
   api.toubilib:
     build:
       context: build
@@ -53,20 +62,37 @@ services:
       - toubilib.net
     depends_on:
       - toubiprat.db
-      - toubiauth.db
-      - toubipat.db
       - toubirdv.db
+    # ICI : Idem, on lance direct
+    command: php -S 0.0.0.0:80 -t /var/php/public
+
+  # ------------------------------------------------------------
+  # API PRATICIENS (Collègues)
+  # ------------------------------------------------------------
+  api.praticiens:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6081:80'
+    volumes:
+      - ./app-praticiens:/var/php
+    working_dir: /var/php
+    networks:
+      - toubilib.net
+    depends_on:
+      - toubiprat.db
+    # Eux n'ont peut-être pas le vendor, on laisse composer install par sécurité
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
-    # service toubiprat.db : base de données postgresql pour les praticiens
-
+  # ------------------------------------------------------------
+  # BASES DE DONNÉES (Inchangé)
+  # ------------------------------------------------------------
   toubiprat.db:
     image: 'postgres:latest'
     env_file: ./toubipratdb.env
-    ports:
-      - '5432:5432'
-    networks:
-      - toubilib.net
+    ports: ['5432:5432']
+    networks: [toubilib.net]
     volumes:
       - ./sql/toubiprat.schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./sql/toubiprat.data.sql:/docker-entrypoint-initdb.d/02-data.sql
@@ -74,44 +100,31 @@ services:
   toubiauth.db:
     image: 'postgres:latest'
     env_file: ./toubiauthdb.env
-    ports:
-      - '5433:5432'
-    networks:
-      - toubilib.net
+    ports: ['5433:5432']
+    networks: [toubilib.net]
     volumes:
       - ./sql/toubiauth.schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./sql/toubiauth.data.sql:/docker-entrypoint-initdb.d/02-data.sql
 
-  toubipat.db:
-    image: 'postgres:latest'
-    env_file: ./toubipatientdb.env
-    ports:
-      - '5435:5432'
-    networks:
-      - toubilib.net
-    volumes:
-      - ./sql/toubipat.schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./sql/toubipat.data.sql:/docker-entrypoint-initdb.d/02-data.sql
-
-
   toubirdv.db:
     image: 'postgres:latest'
     env_file: ./toubirdvdb.env
-    ports:
-      - '5434:5432'
-    networks:
-      - toubilib.net
+    ports: ['5434:5432']
+    networks: [toubilib.net]
     volumes:
       - ./sql/toubirdv.schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./sql/toubirdv.data.sql:/docker-entrypoint-initdb.d/02-data.sql
 
-  #
-  # service administration des bases sql
-  #
+  toubipat.db:
+    image: 'postgres:latest'
+    env_file: ./toubipatientdb.env
+    ports: ['5435:5432']
+    networks: [toubilib.net]
+    volumes:
+      - ./sql/toubipat.schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./sql/toubipat.data.sql:/docker-entrypoint-initdb.d/02-data.sql
+
   adminer:
     image: adminer
-    ports:
-      - '8080:8080'
-    networks:
-      - toubilib.net
-
+    ports: ['8080:8080']
+    networks: [toubilib.net]

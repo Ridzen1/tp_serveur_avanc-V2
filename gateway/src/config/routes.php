@@ -21,6 +21,7 @@ return function(\Slim\App $app): \Slim\App {
 
     $app->get('/praticiens', GenericProxyAction::class);
     $app->get('/praticiens/{id}', GenericProxyAction::class);
+    $app->map(['GET', 'POST', 'PUT', 'DELETE'], '/rdvs[/{params:.*}]', \Gateway\Actions\GenericProxyAction::class);
 
     return $app;
 };

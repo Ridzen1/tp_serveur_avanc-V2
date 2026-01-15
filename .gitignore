@@ -11,5 +11,6 @@ composer.phar
 /app/composer.lock
 /app-praticiens/vendor/
 /app-praticiens/composer.lock
+/app-rdv/vendor/
 
 TODOVivien.md

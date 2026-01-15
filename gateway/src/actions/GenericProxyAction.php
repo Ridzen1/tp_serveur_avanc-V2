@@ -73,9 +73,17 @@ class GenericProxyAction
     
     private function getClientForPath(string $path): Client
     {
-        if (preg_match('#^/praticiens(/.*)?$#', $path)) {
-            return $this->container->get('praticiens.client');
+        // Si l'URL commence par /praticiens
+        if (str_starts_with($path, '/praticiens')) {
+            return $this->container->get('client.praticiens'); // Vérifie le nom dans ton services.php
         }
+        
+        // AJOUT EXERCICE 4 : Si l'URL commence par /rdvs
+        if (str_starts_with($path, '/rdvs')) {
+            return $this->container->get('client.rdv');
+        }
+
+        // Par défaut -> Monolithe
         return $this->container->get('toubilib.client');
     }
 }
