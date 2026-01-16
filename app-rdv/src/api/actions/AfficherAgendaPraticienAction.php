@@ -16,7 +16,10 @@ class AfficherAgendaPraticienAction {
         $praticienId = $args['id'] ?? null;
         $queryParams = $request->getQueryParams();
         $dateDebut = $queryParams['date_debut'] ?? null;
+        if ($dateDebut && strlen($dateDebut) === 10) { $dateDebut .= ' 00:00:00'; }
+
         $dateFin = $queryParams['date_fin'] ?? null;
+        if ($dateFin && strlen($dateFin) === 10) { $dateFin .= ' 23:59:59'; }
 
         $agenda = $this->serviceRdv->getAgendaPraticien($praticienId, $dateDebut, $dateFin);
 
