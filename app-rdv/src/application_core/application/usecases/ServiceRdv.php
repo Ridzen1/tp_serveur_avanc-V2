@@ -199,6 +199,7 @@ class ServiceRdv implements ServiceRdvInterface
     public function getAgendaPraticien(string $praticienId, ?string $dateDebut = null, ?string $dateFin = null): array
     {
         // if (!$dateDebut || !$dateFin) { ... } removed to support unrestricted search
+        // Permettre la recherche sur toute la période sans dates spécifiées
 
         $rdvs = $this->rdvRepository->findCreneauxByPraticienAndPeriode($praticienId, $dateDebut, $dateFin);
 
