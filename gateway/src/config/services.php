@@ -21,10 +21,11 @@ return [
         ]);
     },
     'client.rdv' => function (ContainerInterface $c) {
+        $settings = $c->get('settings');
         return new Client([
-            // 'api.rdv' est le nom du service dans docker-compose
-            'base_uri' => 'http://api.rdv', 
-            'timeout' => 5.0,
+            'base_uri' => $settings['services']['rdv']['base_url'],
+            'timeout' => $settings['services']['rdv']['timeout'],
+            'http_errors' => true
         ]);
     }
 ];
