@@ -37,10 +37,8 @@ class GenericProxyAction
 
             $response->getBody()->write($apiResponse->getBody()->getContents());
 
-            // Copie les headers pertinents de la réponse API vers la réponse Gateway
             $newResponse = $response->withStatus($apiResponse->getStatusCode());
             foreach ($apiResponse->getHeaders() as $name => $values) {
-                // Éviter certains headers qui pourraient poser problème
                 if (!in_array(strtolower($name), ['content-length', 'transfer-encoding', 'connection'])) {
                     $newResponse = $newResponse->withHeader($name, $values);
                 }
@@ -73,20 +71,15 @@ class GenericProxyAction
     
     private function getClientForPath(string $path): Client
     {
-        // Si l'URL commence par /praticiens
         if (str_starts_with($path, '/praticiens')) {
             if (str_contains($path, '/rdvs')) {
                 return $this->container->get('client.rdv');
             }
-            return $this->container->get('client.praticiens'); // Vérifie le nom dans ton services.php
+            return $this->container->get('client.praticiens');
         }
-        
-        // AJOUT EXERCICE 4 : Si l'URL commence par /rdvs
         if (str_starts_with($path, '/rdvs')) {
             return $this->container->get('client.rdv');
         }
-
-        // Par défaut -> Monolithe
         return $this->container->get('toubilib.client');
     }
 }

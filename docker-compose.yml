@@ -3,9 +3,7 @@ networks:
     driver: bridge
 
 services:
-  # ------------------------------------------------------------
   # API GATEWAY
-  # ------------------------------------------------------------
   api.gateway:
     build:
       context: build
@@ -21,13 +19,10 @@ services:
       - api.toubilib
       - api.praticiens
       - api.rdv
-    # Commande Gateway : on doit faire l'install car le vendor n'est pas copié manuellement ici
-    # Si ça plante, on fera la même manip "docker run" pour la gateway
+
     command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
 
-  # ------------------------------------------------------------
-  # SERVICE RDV (Ton exercice)
-  # ------------------------------------------------------------
+  # SERVICE RDV
   api.rdv:
     build:
       context: build
@@ -43,12 +38,9 @@ services:
       - toubirdv.db
     environment:
       - DB_HOST=toubirdv.db
-    # ICI : On ne fait PAS de composer install car tu viens de le faire à l'étape 2
     command: php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public
 
-  # ------------------------------------------------------------
-  # API TOUBILIB (Monolithe)
-  # ------------------------------------------------------------
+  # API TOUBILIB
   api.toubilib:
     build:
       context: build
@@ -63,12 +55,9 @@ services:
     depends_on:
       - toubiprat.db
       - toubirdv.db
-    # ICI : Idem, on lance direct
     command: php -S 0.0.0.0:80 -t /var/php/public
 
-  # ------------------------------------------------------------
-  # API PRATICIENS (Collègues)
-  # ------------------------------------------------------------
+  # API PRATICIENS
   api.praticiens:
     build:
       context: build
@@ -82,12 +71,10 @@ services:
       - toubilib.net
     depends_on:
       - toubiprat.db
-    # Eux n'ont peut-être pas le vendor, on laisse composer install par sécurité
+
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
-  # ------------------------------------------------------------
-  # BASES DE DONNÉES (Inchangé)
-  # ------------------------------------------------------------
+  # BASES DE DONNÉES
   toubiprat.db:
     image: 'postgres:latest'
     env_file: ./toubipratdb.env
