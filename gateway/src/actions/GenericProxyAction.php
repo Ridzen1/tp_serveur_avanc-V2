@@ -75,6 +75,9 @@ class GenericProxyAction
     {
         // Si l'URL commence par /praticiens
         if (str_starts_with($path, '/praticiens')) {
+            if (str_contains($path, '/rdvs')) {
+                return $this->container->get('client.rdv');
+            }
             return $this->container->get('client.praticiens'); // Vérifie le nom dans ton services.php
         }
         

@@ -28,9 +28,22 @@ class PDORdvRepository implements RdvRepositoryInterface {
         );
     }
 
-    public function findCreneauxByPraticienAndPeriode(string $praticienId, string $dateDebut, string $dateFin): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM rdv WHERE praticien_id = :pid AND date_heure_debut >= :deb AND date_heure_fin <= :fin');
-        $stmt->execute(['pid' => $praticienId, 'deb' => $dateDebut, 'fin' => $dateFin]);
+    public function findCreneauxByPraticienAndPeriode(string $praticienId, ?string $dateDebut, ?string $dateFin): array {
+        $sql = 'SELECT * FROM rdv WHERE praticien_id = :pid';
+        $params = ['pid' => $praticienId];
+
+        if ($dateDebut) {
+             $sql .= ' AND date_heure_debut >= :deb';
+             $params['deb'] = $dateDebut;
+        }
+
+        if ($dateFin) {
+            $sql .= ' AND date_heure_fin <= :fin';
+            $params['fin'] = $dateFin;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll();
         $result = [];
         foreach ($rows as $row) {

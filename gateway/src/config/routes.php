@@ -11,7 +11,10 @@ return function(\Slim\App $app): \Slim\App {
             'version' => '1.0',
             'endpoints' => [
                 'GET /praticiens' => 'Liste des praticiens',
-                'GET /praticiens/{id}' => 'Détails d\'un praticien'
+                'GET /praticiens/{id}' => 'Détails d\'un praticien',
+                'ANY /rdvs[/{params}]' => 'Gestion des rendez-vous (GET, POST, PUT, DELETE)',
+                'GET /praticiens/{id}/rdvs' => 'Liste des rendez-vous d\'un praticien (ex: ?date_debut=2020-01-01&date_fin=2030-12-31)'
+                
             ]
         ]));
         return $response
@@ -21,7 +24,8 @@ return function(\Slim\App $app): \Slim\App {
 
     $app->get('/praticiens', GenericProxyAction::class);
     $app->get('/praticiens/{id}', GenericProxyAction::class);
-    $app->map(['GET', 'POST', 'PUT', 'DELETE'], '/rdvs[/{params:.*}]', \Gateway\Actions\GenericProxyAction::class);
+    $app->get('/praticiens/{id}/rdvs', GenericProxyAction::class);
+    $app->map(['GET', 'POST', 'PUT', 'DELETE'], '/rdvs[/{params:.*}]', GenericProxyAction::class);
 
     return $app;
 };
