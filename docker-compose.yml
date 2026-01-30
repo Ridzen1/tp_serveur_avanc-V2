@@ -155,7 +155,7 @@ services:
       context: build
       dockerfile: 8.4-cli.Dockerfile
     ports:
-      - '6083:80'
+      - '6084:80'
     volumes:
       - ./app-mail:/var/php
     working_dir: /var/php
