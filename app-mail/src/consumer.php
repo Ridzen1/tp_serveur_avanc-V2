@@ -27,7 +27,8 @@ $channel->queue_bind($queue, $exchange, 'rdv.*');
 
 $channel->basic_qos(null, 1, null);
 
-$mailer = new SymfonyMailerAdapter();
+// Use factory so driver / DSN can be changed via env without code changes
+$mailer = \MailService\Mailer\MailerFactory::create();
 
 $callback = function (AMQPMessage $msg) use ($mailer) {
     echo "\n[" . date('Y-m-d H:i:s') . "] Received message\n";
