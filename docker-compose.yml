@@ -150,6 +150,14 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  mailcatcher:
+    image: schickling/mailcatcher
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+    networks:
+      - toubilib.net
+
   app.mail:
     build:
       context: build
@@ -163,6 +171,10 @@ services:
       - toubilib.net
     depends_on:
       - rabbitmq
+      - mailcatcher
+    environment:
+      - MAILER_HOST=mailcatcher
+      - MAILER_PORT=1025
     command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
 
 volumes:
