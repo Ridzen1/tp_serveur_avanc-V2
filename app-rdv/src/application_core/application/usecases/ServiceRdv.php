@@ -20,15 +20,18 @@ class ServiceRdv implements ServiceRdvInterface
     // MODIFIÉ : On utilise le Service (Interface) au lieu du Repository
     private PraticienServiceInterface $praticienService;
     private PatientRepositoryInterface $patientRepository;
+    private \toubilib\core\application\ports\spi\EventPublisherInterface $eventPublisher;
 
     public function __construct(
         RdvRepositoryInterface $rdvRepository,
         PraticienServiceInterface $praticienService, // Injection de l'adaptateur
-        PatientRepositoryInterface $patientRepository
+        PatientRepositoryInterface $patientRepository,
+        \toubilib\core\application\ports\spi\EventPublisherInterface $eventPublisher
     ) {
         $this->rdvRepository = $rdvRepository;
         $this->praticienService = $praticienService;
         $this->patientRepository = $patientRepository;
+        $this->eventPublisher = $eventPublisher;
     }
 
     public function getRdvById(string $id): ?RdvDTO
@@ -163,6 +166,20 @@ class ServiceRdv implements ServiceRdvInterface
         );
 
         $this->rdvRepository->save($rdv);
+
+        // Publish event to message broker (non bloquant en cas d'erreur)
+        try {
+            $this->eventPublisher->publish('rdv.created', [
+                'rdv_id' => $id,
+                'praticien_email' => $praticienData['email'] ?? null,
+                'patient_email' => $patient_email,
+                'date_rdv' => $dto->date_heure_debut,
+                'motif' => $motifLabel
+            ]);
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
         return $id;
     }
 
@@ -174,6 +191,18 @@ class ServiceRdv implements ServiceRdvInterface
         }
         $rdv->annuler();
         $this->rdvRepository->save($rdv);
+
+        try {
+            $this->eventPublisher->publish('rdv.cancelled', [
+                'rdv_id' => $idRdv,
+                'praticien_email' => $rdv->getPatientEmail(),
+                'patient_email' => $rdv->getPatientEmail(),
+                'date_rdv' => $rdv->getDateHeureDebut(),
+                'motif' => $rdv->getMotifVisite()
+            ]);
+        } catch (\Throwable $e) {
+            // ignore publishing errors
+        }
     }
 
     public function honorerRendezVous(string $idRdv): void

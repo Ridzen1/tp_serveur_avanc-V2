@@ -43,11 +43,17 @@ return [
     // -------------------------------------------------------------------------
     // SERVICE RDV
     // -------------------------------------------------------------------------
+    EventPublisherInterface::class => function (ContainerInterface $c) {
+        // Use RabbitMQ adapter (will fall back to NullEventPublisher on error)
+        return new \toubilib\infra\publishers\RabbitMQEventPublisher();
+    },
+
     ServiceRdvInterface::class => function (ContainerInterface $container) {
         return new ServiceRdv(
             $container->get(RdvRepositoryInterface::class),
             $container->get(PraticienServiceInterface::class),
-            $container->get(PatientRepositoryInterface::class)
+            $container->get(PatientRepositoryInterface::class),
+            $container->get(\toubilib\core\application\ports\spi\EventPublisherInterface::class)
         );
     },
 
