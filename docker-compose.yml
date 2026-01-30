@@ -19,6 +19,7 @@ services:
       - api.toubilib
       - api.praticiens
       - api.rdv
+      - api.auth
 
     command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
 
@@ -38,7 +39,25 @@ services:
       - toubirdv.db
     environment:
       - DB_HOST=toubirdv.db
-    command: php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public
+    command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
+
+  # API AUTH
+  api.auth:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6083:80'
+    volumes:
+      - ./app.auth:/var/php
+    working_dir: /var/php
+    networks:
+      - toubilib.net
+    depends_on:
+      - toubiauth.db
+    environment:
+      - DB_HOST=toubiauth.db
+    command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
 
   # API TOUBILIB
   api.toubilib:
@@ -53,9 +72,11 @@ services:
     networks:
       - toubilib.net
     depends_on:
-      - toubiprat.db
-      - toubirdv.db
-    command: php -S 0.0.0.0:80 -t /var/php/public
+      - toubipat.db
+    environment:
+      - DB_HOST=toubipat.db
+    command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
+
 
   # API PRATICIENS
   api.praticiens:
@@ -72,7 +93,7 @@ services:
     depends_on:
       - toubiprat.db
 
-    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
 
   # BASES DE DONNÉES
   toubiprat.db:

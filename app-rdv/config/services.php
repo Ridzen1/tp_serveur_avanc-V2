@@ -12,10 +12,14 @@ use toubilib\core\application\ports\api\ServiceRdvInterface;
 use toubilib\infra\repositories\PDORdvRepository;
 use toubilib\infra\repositories\PDOPatientRepository;
 use toubilib\core\application\usecases\ServiceRdv;
+use toubilib\core\application\usecases\ServiceAuthz;
 
 // --- Adaptateur HTTP pour Praticiens ---
 use toubilib\core\application\ports\spi\PraticienServiceInterface;
 use toubilib\infrastructure\adaptateurs\HttpPraticienService;
+
+// --- Middleware ---
+use toubilib\api\middlewares\AuthzRendezVousMiddleware;
 
 return [
 
@@ -73,5 +77,28 @@ return [
 
     PatientRepositoryInterface::class => function (ContainerInterface $container) {
         return new PDOPatientRepository($container->get('pdo.patient'));
+    },
+
+    // -------------------------------------------------------------------------
+    // SERVICE AUTORISATIONS
+    // -------------------------------------------------------------------------
+
+    ServiceAuthz::class => function (ContainerInterface $container) {
+        return new ServiceAuthz(
+            $container->get(RdvRepositoryInterface::class)
+        );
+    },
+
+    // -------------------------------------------------------------------------
+    // MIDDLEWARE AUTORISATION
+    // -------------------------------------------------------------------------
+
+    AuthzRendezVousMiddleware::class => function (ContainerInterface $container) {
+        $settings = $container->get('settings');
+        $jwtSecret = $settings['jwt']['secret'] ?? 'default_secret_key_change_me_in_production';
+        return new AuthzRendezVousMiddleware(
+            $container->get(ServiceAuthz::class),
+            $jwtSecret
+        );
     }
 ];

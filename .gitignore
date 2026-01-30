@@ -15,4 +15,14 @@ composer.phar
 /app-mail/vendor/
 /app-mail/composer.lock
 
+/app-rdv/composer.lock
+/app-toubilib/vendor/
+/app-toubilib/composer.lock
+/app-api-gateway/vendor/
+/app-api-gateway/composer.lock
+/app-api-gateway/composer.lock
+
+/app.auth/vendor/
+/app.auth
+
 TODOVivien.md
