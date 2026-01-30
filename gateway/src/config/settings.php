@@ -3,6 +3,10 @@
 return [
     'displayErrorDetails' => true,
     'services' => [
+        'auth' => [
+            'base_url' => 'http://api.auth:80',
+            'timeout' => 30
+        ],
         'praticiens' => [
             'base_url' => 'http://api.praticiens:80',
             'timeout' => 30
