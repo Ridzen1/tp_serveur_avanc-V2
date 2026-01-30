@@ -115,3 +115,34 @@ services:
     image: adminer
     ports: ['8080:8080']
     networks: [toubilib.net]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '5672:5672'  
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - toubilib.net
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  app.mail:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6083:80'
+    volumes:
+      - ./app-mail:/var/php
+    working_dir: /var/php
+    networks:
+      - toubilib.net
+    depends_on:
+      - rabbitmq
+    command: sh -c "composer install && php -d opcache.enable=0 -S 0.0.0.0:80 -t /var/php/public"
+
+volumes:
+  rabbitmq_data:

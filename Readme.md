@@ -121,3 +121,49 @@ docker-compose.yml
 | **Mathys**        | Bases de données, Docker                                                                                                 |
 | **Ryad-Mathys-Vivien-Julien**       | Lister les praticiens, Détail praticien, Créneaux occupés, Consulter RDV, Réserver RDV, Annuler RDV, Agenda praticien | Honorer, non honorer
 | **Ryad**       | Détail praticien, Status, HATEOAS                                                                                        |
+
+
+TD 2.3
+
+ajout d'un dossier docs contenant le schéma des services concerné sur le plan fonctionnel.
+
+Configuration RabbitMQ proposée :
+Type d'exchange : topic
+
+Permet le routing flexible avec patterns
+Supporte l'évolution future
+Et permet le multi-consommateurs donc SMS, mobile etc
+
+Queues proposées :
+mail.notifications      Pour les emails 
+sms.notifications       Pour les SMS
+push.notifications      possiblement autre chose
+
+Bindings: 
+Binding 1 routing_key = "rdv.*" -> mail.notifications
+        2                          sms.notifications
+        3                          push.notifications
+
+Routing keys utilisées :
+rdv.created
+rdv.cancelled
+rdv.update
+rdv.reminder
+
+
+Architechture
+
+app-rdv/
+├── src/api/actions/
+│   ├── CreerRendezVousAction.php        ← Détecte événement CREATE
+│   ├── AnnulerRDVAction.php             ← Détecte événement CANCEL
+│
+├── src/application_core/application/usecases/
+│   └── ServiceRdv.php                   ← Logique métier, appelle EventPublisher
+│
+├── src/application_core/application/ports/spi/
+│   └── EventPublisherInterface.php      ← PORT
+│
+└── src/infrastructure/publishers/
+    ├── RabbitMQEventPublisher.php       ← ADAPTATEUR AMQP/RabbitMQ
+    └── NullEventPublisher.php           ← Pattern Null pour tests
