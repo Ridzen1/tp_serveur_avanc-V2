@@ -23,6 +23,5 @@ composer.phar
 /app-api-gateway/composer.lock
 
 /app.auth/vendor/
-/app.auth
 
 TODOVivien.md
